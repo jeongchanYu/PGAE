@@ -46,8 +46,8 @@ def make_dataset(source_path, target_path, frame_size, shift_size, window_type, 
     if exist_flag != -1:
         print(f"Already dataset is generated, load dataset {exist_flag}.")
         with open(cf.load_directory() + "/dataset_temp/" + str(exist_flag) + "/full_data.pkl", "rb") as f:
-            source_cut_list, target_cut_list, multi_band_cut_list, number_of_total_frame = pickle.load(f)
-        return source_cut_list, target_cut_list, multi_band_cut_list, number_of_total_frame
+            source_cut_list, target_cut_list, number_of_total_frame = pickle.load(f)
+        return source_cut_list, target_cut_list, number_of_total_frame
     else:
         print("No existing dataset detected, generate new dataset.")
 
@@ -151,10 +151,10 @@ def make_dataset_for_test(source_path, target_path, frame_size, shift_size, wind
     if exist_flag != -1:
         print(f"Already dataset is generated, load dataset {exist_flag}.")
         with open(cf.load_directory() + "/dataset_temp/" + str(exist_flag) + "/full_data.pkl", "rb") as f:
-            source_cut_list, target_cut_list, multi_band_cut_list, number_of_total_frame = pickle.load(f)
+            source_cut_list, target_cut_list, number_of_total_frame = pickle.load(f)
         with open(cf.load_directory() + "/dataset_temp/" + str(exist_flag) + "/data_for_test.pkl", "rb") as f:
             front_padding, rear_padding, padded_length, sample_rate_check = pickle.load(f)
-        return source_cut_list, target_cut_list, multi_band_cut_list, number_of_total_frame, front_padding, rear_padding, padded_length, sample_rate_check
+        return source_cut_list, target_cut_list, number_of_total_frame, front_padding, rear_padding, padded_length, sample_rate_check
     else:
         print("No existing dataset detected, generate new dataset.")
 

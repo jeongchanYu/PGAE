@@ -63,10 +63,11 @@ with strategy.scope():
     # make model
     latent_size = pow(2, pg_step)
     encoder = model.Encoder(frame_size, latent_size)
-    decoder = model.Decoder(latent_size)
+    decoder = model.Decoder(latent_size, channel_size=256)
     def loss_object(y_true, y_pred):
         loss = tf.reduce_mean(tf.abs(tf.subtract(y_true, y_pred)), axis=1)
-        loss = tf.reduce_sum(loss, axis=0)
+        loss = tf.reduce_sum(loss, axis=1)
+        loss = tf.reduce_sum(loss)
         return loss
     optimizer = tf.keras.optimizers.Adam(learning_rate=config['learning_rate'])
     train_loss = tf.keras.metrics.Mean(name='train_loss')
@@ -82,27 +83,27 @@ def train_step(dist_inputs):
         x, y = inputs
         x = tf.reshape(x, [x.shape[0], x.shape[1]])
         y = tf.reshape(y, [y.shape[0], y.shape[1], 1])
-        y = y[:, ::int(pow(2,7-pg_step))]
+        y = y[:, ::int(pow(2,9-pg_step))]
         with tf.GradientTape(persistent=True) as tape:
             latent = encoder(x)
             y_pred = decoder(latent, pg_step)
 
             mae = loss_object(y, y_pred)
-            loss = tf.reduce_sum(mae) * (1.0 / batch_size)
+            loss = mae * (1.0 / batch_size)
 
         encoder_gradients = tape.gradient(loss, encoder.trainable_variables)
         decoder_gradients = tape.gradient(loss, decoder.trainable_variables)
         optimizer.apply_gradients(zip(encoder_gradients, encoder.trainable_variables))
         optimizer.apply_gradients(zip(decoder_gradients, decoder.trainable_variables))
 
-        return mae
+        return loss
 
     if tf_version[1] > 2:
         per_example_losses = strategy.run(step_fn, args=(dist_inputs,))
     else:
         per_example_losses = strategy.experimental_run_v2(step_fn, args=(dist_inputs,))
     mean_loss = strategy.reduce(tf.distribute.ReduceOp.SUM, per_example_losses, axis=None)
-    train_loss(mean_loss/batch_size)
+    train_loss(mean_loss)
 
 
 # test function
@@ -112,21 +113,21 @@ def valid_step(dist_inputs):
         x, y = inputs
         x = tf.reshape(x, [x.shape[0], x.shape[1]])
         y = tf.reshape(y, [y.shape[0], y.shape[1], 1])
-        y = y[:, ::int(pow(2,7-pg_step))]
+        y = y[:, ::int(pow(2,9-pg_step))]
 
         latent = encoder(x)
         y_pred = decoder(latent, pg_step)
 
         mae = loss_object(y, y_pred)
-
-        return mae
+        loss = mae * (1.0 / batch_size)
+        return loss
 
     if tf_version[1] > 2:
         per_example_losses = strategy.run(step_fn, args=(dist_inputs,))
     else:
         per_example_losses = strategy.experimental_run_v2(step_fn, args=(dist_inputs,))
     mean_loss = strategy.reduce(tf.distribute.ReduceOp.SUM, per_example_losses, axis=None)
-    valid_loss(mean_loss / batch_size)
+    valid_loss(mean_loss)
 
 
 # train run
@@ -148,7 +149,7 @@ with strategy.scope():
         if validation_test:
             valid_loss.reset_states()
     else:
-        full_path = cf.load_directory() + '/multi_band_plot/'
+        full_path = cf.load_directory() + '/plot/'
         cf.createFolder(full_path)
         cf.clear_plot_file(full_path + plot_name + '.plot')
         cf.clear_csv_file(full_path + plot_name + '.csv')
@@ -189,7 +190,7 @@ with strategy.scope():
 
 
         # write plot file
-        full_path = cf.load_directory() + '/multi_band_plot/'
+        full_path = cf.load_directory() + '/plot/'
         cf.createFolder(full_path)
         cf.write_plot_file(full_path + plot_name + '.plot', epoch+1, train_loss.result())
         cf.write_csv_file(full_path + plot_name + '.csv', epoch+1, train_loss.result())

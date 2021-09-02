@@ -24,7 +24,7 @@ class Encoder(tf.keras.Model):
         self.encoder.append(PReLU())
         self.encoder.append(Dense(frame_size*2))
         self.encoder.append(PReLU())
-        self.encoder.append(Dense(frame_size))
+        self.encoder.append(Dense(frame_size//2))
         self.encoder.append(PReLU())
 
 
@@ -37,39 +37,40 @@ class Encoder(tf.keras.Model):
 
 
 class Decoder(tf.keras.Model):
-    def __init__(self, latent_size, default_float='float32'):
+    def __init__(self, latent_size, channel_size=128, default_float='float32'):
         super(Decoder, self).__init__()
         tf.keras.backend.set_floatx(default_float)
         self.latent_size = latent_size
-        self.style_block = [StyleBlock(pow(2, i+2)) for i in range(8)]
-        self.conv_output = Conv1D(1, 3, activation='tanh')
+        self.channel_size = channel_size
+        self.style_block = [StyleBlock(pow(2, i+1), self.channel_size) for i in range(9)]
+        self.conv_output = Conv1D(1, 3, padding='same', activation='tanh')
 
     def call(self, latent, step):
-        input = tf.zeros([latent.shape[0], 4, 128])
+        input = tf.constant(0.1, shape=[latent.shape[0], 2, self.channel_size])
         for i in range(step):
             input = self.style_block[i](input, latent)
         output = self.conv_output(input)
         return output
 
 class StyleBlock(tf.Module):
-    def __init__(self, latent_size, default_float='float32'):
+    def __init__(self, latent_size, channel_size, default_float='float32'):
         super(StyleBlock, self).__init__()
         tf.keras.backend.set_floatx(default_float)
         self.latent_size = latent_size
+        self.channel_size = channel_size
         self.alpha = tf.Variable(0.5)
         self.up = UpSampling1D(2)
-        self.conv1 = Conv1D(128, 3, padding='same')
-        self.affine1_scale = Dense(128)
-        self.affine1_offset = Dense(128)
-        self.conv2 = Conv1D(128, 3, padding='same')
-        self.affine2_scale = Dense(128)
-        self.affine2_offset = Dense(128)
+        self.conv1 = Conv1D(self.channel_size, 3, padding='same')
+        self.affine1_scale = Dense(self.channel_size)
+        self.affine1_offset = Dense(self.channel_size)
+        self.conv2 = Conv1D(self.channel_size, 3, padding='same')
+        self.affine2_scale = Dense(self.channel_size)
+        self.affine2_offset = Dense(self.channel_size)
         self.prelu = PReLU()
         self.norm = LayerNormalization(axis=1)
 
-    def call(self, x, latent):
+    def __call__(self, x, latent):
         latent_sliced = tf.slice(latent, [0, 0], [latent.shape[0], self.latent_size])
-        latent_sliced = tf.expand_dims(latent_sliced, 1)
         scale1 = tf.expand_dims(self.affine1_scale(latent_sliced), 1)
         offset1 = tf.expand_dims(self.affine1_offset(latent_sliced), 1)
         scale2 = tf.expand_dims(self.affine2_scale(latent_sliced), 1)
@@ -84,6 +85,6 @@ class StyleBlock(tf.Module):
         normalized = self.norm(after_conv)
         styled = normalized*scale2 + offset2
 
-        output = styled + x * self.alpha
+        output = styled + upsampled * self.alpha
 
         return output
