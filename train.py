@@ -143,7 +143,7 @@ with strategy.scope():
         full_path = cf.load_directory() + '/checkpoint/' + load_checkpoint_name
         encoder.load_weights(full_path + '/encoder_data.ckpt')
         decoder.load_weights(full_path + '/decoder_data.ckpt')
-        cf.load_optimizer_state(optimizer, full_path + '/optimizer')
+        # cf.load_optimizer_state(optimizer, full_path + '/optimizer')
 
         train_loss.reset_states()
         if validation_test:

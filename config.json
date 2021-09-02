@@ -4,7 +4,7 @@
   "window_type"   : "uniform",
   "sampling_rate" : 16000,
 
-  "pg_step"   : 1,
+  "pg_step"   : 3,
 
   "batch_size"    : 1024,
   "epochs"        : 10000,
@@ -20,12 +20,9 @@
   "test_source_path"        : "./dataset/test/orig/voice_woman1_3min_0_0.wav",
   "test_target_path"        : "./dataset/test/orig/voice_woman1_3min_0_0.wav",
 
-  "load_filter_checkpoint"  : "",
-  "save_filter_checkpoint"  : "PGAE",
-
-  "load_checkpoint_name"    : "",
+  "load_checkpoint_name"    : "PGAE_20000",
   "save_checkpoint_name"    : "PGAE",
-  "save_checkpoint_period"  : 10,
+  "save_checkpoint_period"  : 100,
   "validation_test"         : false,
   "plot_name"               : "PGAE"
 }
