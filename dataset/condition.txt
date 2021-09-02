@@ -1,0 +1,11 @@
+<file_name>_<speaker_condition>_<noise_condition>.wav
+ex) voice_record_1_2.wav
+
+Speaker Condition
+0 : A
+1 : B
+
+Noise Condition
+0 : babble
+1 : metro
+2 : pink

@@ -1,0 +1,31 @@
+{
+  "frame_size"    : 1024,
+  "shift_size"    : 800,
+  "window_type"   : "uniform",
+  "sampling_rate" : 16000,
+
+  "pg_step"   : 1,
+
+  "batch_size"    : 256,
+  "epochs"        : 10000,
+  "learning_rate" : 0.0001,
+  "default_float" : "float32",
+
+  "train_source_path"       : "./dataset/early_stop/10min/train/orig/voice_woman1_10min_0_0.wav",
+  "train_target_path"       : "./dataset/early_stop/10min/train/orig/voice_woman1_10min_0_0.wav",
+
+  "valid_source_path"       : "./dataset/early_stop/10min/validation/orig/voice_woman1_10min_0_0.wav",
+  "valid_target_path"       : "./dataset/early_stop/10min/validation/orig/voice_woman1_10min_0_0.wav",
+
+  "test_source_path"        : "./dataset/test/orig/voice_woman1_3min_0_0.wav",
+  "test_target_path"        : "./dataset/test/orig/voice_woman1_3min_0_0.wav",
+
+  "load_filter_checkpoint"  : "",
+  "save_filter_checkpoint"  : "PGAE",
+
+  "load_checkpoint_name"    : "",
+  "save_checkpoint_name"    : "PGAE",
+  "save_checkpoint_period"  : 10,
+  "validation_test"         : false,
+  "plot_name"               : "PGAE"
+}
